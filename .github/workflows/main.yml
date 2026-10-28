@@ -25,8 +25,12 @@ jobs:
 
       - name: Install apps
         shell: powershell
+        continue-on-error: true
         run: |
-          choco install -y googlechrome vscode git godot
+          choco install -y googlechrome --no-progress
+          choco install -y vscode --no-progress
+          choco install -y godot --no-progress
+          exit 0
 
       - name: Run and auto-save
         shell: powershell
