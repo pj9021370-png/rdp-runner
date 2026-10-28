@@ -1,0 +1,41 @@
+name: RDP
+on: workflow_dispatch
+jobs:
+  rdp:
+    runs-on: windows-latest
+    timeout-minutes: 360
+    steps:
+      - name: Enable RDP
+        shell: powershell
+        run: |
+          Set-ItemProperty 'HKLM:\System\CurrentControlSet\Control\Terminal Server' fDenyTSConnections 0
+          Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+          net user runneradmin "${{ secrets.RDP_PASS }}"
+
+      - uses: tailscale/github-action@v3
+        with:
+          authkey: ${{ secrets.TS_AUTHKEY }}
+
+      - name: Restore data
+        shell: powershell
+        run: |
+          git config --global user.email "me@x.com"
+          git config --global user.name "me"
+          git clone https://${{ secrets.GH_PAT }}@github.com/pj9021370-png/my-game.git C:\work
+
+      - name: Install apps
+        shell: powershell
+        run: |
+          choco install -y googlechrome vscode git godot
+
+      - name: Run and auto-save
+        shell: powershell
+        run: |
+          $end = (Get-Date).AddMinutes(350)
+          while ((Get-Date) -lt $end) {
+            Start-Sleep 300
+            cd C:\work
+            git add -A
+            git commit -m "autosave" 2>$null
+            git push 2>$null
+          }
